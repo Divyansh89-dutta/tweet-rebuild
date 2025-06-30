@@ -1,4 +1,5 @@
 import Tweet from "../models/Tweet.js";
+import redisClient from "../utils/redisClient.js";
 
 export const createTweet = async(req, res) => {
     const { content } = req.body;
@@ -40,8 +41,8 @@ export const retweet = async(req, res) => {
 
     const newTweet = await Tweet.create({
         user: req.user._id,
-        content: '',
-        media: '',
+        content: originalTweet.content,
+        media: originalTweet.media,
         parent: originalTweet._id
     })
 
@@ -51,37 +52,54 @@ export const retweet = async(req, res) => {
     res.status(201).json({ message: 'Tweet retweeted'});
 }
 
-export const replyToTweet = async(req, res) => {
+export const replyToTweet = async (req, res) => {
     const { content } = req.body;
     const parentTweet = await Tweet.findById(req.params.id);
-    if(!parentTweet) return res.status(404).json({ message: 'Parent tweet not found' });
+    if (!parentTweet) {
+        return res.status(404).json({ message: 'Parent tweet not found' });
+    }
+
+    let mediaUrl = '';
+    if (req.file) {
+        mediaUrl = req.file.path;  
+    }
 
     const replyTweet = await Tweet.create({
         user: req.user._id,
         content,
-        media: '',
+        media: mediaUrl,
         parent: parentTweet._id
     });
     parentTweet.replies.push(replyTweet._id);
     await parentTweet.save();
-}
 
-export const getTimeline = async(req, res) => {
-    try{
-        const userId = req.user._id;
-        // get current user with who thet follow
-        const user = await User.findById(userId).select('following', 'tweets');
-        // get tweets from users that the current user follows
-        const tweets = await Tweet.find({
-            user: {$in: [userId, ...user.following]},
-        })
-        .populate('user', 'username name avatar')
-        .populate('parent', 'content media user')
-        .sort({ createdAt: -1 })
-        .limit(50); // Limit to 20 tweets
-        res.status(200).json(tweets);
-    }catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+    res.status(201).json(replyTweet);
+};
+
+export const getTimeline = async (req, res) => {
+  const userId = req.user._id.toString();
+  const cacheKey = `timeline:${userId}`;
+
+  try {
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      return res.status(200).json(JSON.parse(cached));
     }
-}
+    const user = await User.findById(userId).select('following');
+
+    const tweets = await Tweet.find({
+      user: { $in: [userId, ...user.following] }
+    })
+      .populate('user', 'username name avatar')
+      .populate('parent', 'user content')
+      .sort({ createdAt: -1 })
+      .limit(50);
+    await redisClient.set(cacheKey, JSON.stringify(tweets), {
+      EX: 60, 
+    });
+    res.status(200).json(tweets);
+  } catch (err) {
+    console.error('Timeline error:', err);
+    res.status(500).json({ message: 'Error fetching timeline' });
+  }
+};

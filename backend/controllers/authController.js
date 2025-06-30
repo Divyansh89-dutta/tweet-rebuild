@@ -37,23 +37,35 @@ export const loginUser = async (req, res) => {
     const { email, username, password } = req.body;
 
     if (!password || (!email && !username)) {
-        return res.status(400).json({ message: 'Email or Username and password are required' });
+        return res
+            .status(400)
+            .json({ message: 'Email or Username and password are required' });
     }
 
-    const user = await User.findOne({
-        $or: [
-            email ? { email } : {},
-            username ? { username } : {}
-        ]
-    }).select('+password');
+    let user = null;
+
+    if (email && username) {
+        // Either email or username matches
+        user = await User.findOne({
+            $or: [{ email }, { username }]
+        }).select('+password');
+    } else if (email) {
+        user = await User.findOne({ email }).select('+password');
+    } else if (username) {
+        user = await User.findOne({ username }).select('+password');
+    }
 
     if (!user) {
-        return res.status(401).json({ message: 'Invalid Username or Password' });
+        return res
+            .status(401)
+            .json({ message: 'Invalid Username or Password' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-        return res.status(401).json({ message: 'Invalid Username or Password' });
+        return res
+            .status(401)
+            .json({ message: 'Invalid Username or Password' });
     }
 
     const token = generateToken(user._id);
@@ -62,7 +74,7 @@ export const loginUser = async (req, res) => {
         name: user.name,
         username: user.username,
         email: user.email,
-        token
+        token,
     });
 };
 export const getUserProfile = async (req, res) => {

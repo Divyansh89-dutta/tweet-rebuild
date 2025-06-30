@@ -20,7 +20,9 @@ const tweetSchema = new mongoose.Schema({
         ref: 'User'
     }],
     retweets: [{
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
+        required: true,
+        maxlength: 280,
         ref: 'User'
     }],
     replies: [{
