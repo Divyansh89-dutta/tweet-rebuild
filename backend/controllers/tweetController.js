@@ -1,5 +1,6 @@
 import Tweet from "../models/Tweet.js";
 import redisClient from "../utils/redisClient.js";
+import User from "../models/user.js";
 
 export const createTweet = async(req, res) => {
     const { content } = req.body;
@@ -79,14 +80,14 @@ export const replyToTweet = async (req, res) => {
 export const getTimeline = async (req, res) => {
   const userId = req.user._id.toString();
   const cacheKey = `timeline:${userId}`;
-
   try {
     const cached = await redisClient.get(cacheKey);
     if (cached) {
+      console.log('Timeline served from Redis Cache');
       return res.status(200).json(JSON.parse(cached));
     }
+    // If not cached, fetch from MongoDB
     const user = await User.findById(userId).select('following');
-
     const tweets = await Tweet.find({
       user: { $in: [userId, ...user.following] }
     })
@@ -94,12 +95,12 @@ export const getTimeline = async (req, res) => {
       .populate('parent', 'user content')
       .sort({ createdAt: -1 })
       .limit(50);
-    await redisClient.set(cacheKey, JSON.stringify(tweets), {
-      EX: 60, 
-    });
-    res.status(200).json(tweets);
+    // Save to Redis
+    await redisClient.set(cacheKey, JSON.stringify(tweets), { EX: 60 });
+    console.log('Timeline fetched from MongoDB and saved to Redis');
+    return res.status(200).json(tweets);
   } catch (err) {
-    console.error('Timeline error:', err);
+    console.error('Timeline Error:', err);
     res.status(500).json({ message: 'Error fetching timeline' });
   }
 };
