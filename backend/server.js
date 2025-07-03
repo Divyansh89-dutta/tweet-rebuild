@@ -6,7 +6,7 @@ import client from './utils/redisClient.js';
 
 const PORT = process.env.PORT || 5000;
 
-connectDB().then(async() => {
+connectDB().then(async () => {
     await client.connect();
     console.log('Connected to MongoDB and Redis');
     app.listen(PORT, () => {

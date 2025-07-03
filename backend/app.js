@@ -21,7 +21,7 @@ app.use(morgan('dev'));
 app.use(helmet());
 
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, 
+    windowMs: 15 * 60 * 1000,
     max: 100,
 });
 app.use(limiter);

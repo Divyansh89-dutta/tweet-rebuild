@@ -21,17 +21,19 @@ function Home() {
     }
     fetchTweets();
   }, []);
-  return <div>
-    <h2>Home feed</h2>
-    <ul>
+  return (
+    <div>
+      <h2>Home feed</h2>
+      <ul>
         {Array.isArray(tweets) &&
           tweets.map((tweet) => (
             <li key={tweet._id}>
               <strong>{tweet.user?.username}:</strong> {tweet.text}
             </li>
           ))}
-    </ul>
-  </div>;
+      </ul>
+    </div>
+  );
 }
 
 export default Home;

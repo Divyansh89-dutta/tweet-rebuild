@@ -1,31 +1,31 @@
 import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
-    name:{
+    name: {
         type: String,
         required: true
     },
-    username:{
+    username: {
         type: String,
         required: true,
         unique: true,
         lowercase: true,
     },
-    email:{
+    email: {
         type: String,
         required: true,
         unique: true,
     },
-    password:{
+    password: {
         type: String,
         required: true,
         select: false, // Do not return password in queries
     },
-    boi:{
+    boi: {
         type: String,
-        default:'',
+        default: '',
     },
-    avatar:{
+    avatar: {
         type: String,
         default: '', // cloudinary image URL
     },

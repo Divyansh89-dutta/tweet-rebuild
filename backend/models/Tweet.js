@@ -1,17 +1,17 @@
 import mongoose from "mongoose";
 
 const tweetSchema = new mongoose.Schema({
-    user:{
+    user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
-    content:{
+    content: {
         type: String,
         required: true,
         maxlength: 280 // Twitter's character limit
     },
-    media:{
+    media: {
         type: String,
         default: '', // cloudinary image URL
     },
@@ -29,7 +29,7 @@ const tweetSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Tweet'
     }],
-    parent:{
+    parent: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Tweet',
     },
