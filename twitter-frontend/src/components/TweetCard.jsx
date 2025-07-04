@@ -1,8 +1,8 @@
-import axios from "axios";
+import API from "../api/axios";
 import React from "react";
 import { useState } from "react";
 
-function TweetCard() {
+function TweetCard({ onTweetPosted }) {
   const [text, setText] = useState("");
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState("");
@@ -13,22 +13,29 @@ function TweetCard() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const formData = new FormData();
-    formData.append("text".text);
+    formData.append("content", text);
     if (file) {
       formData.append("media", file);
     }
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.post("/api/tweets", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      // const token = localStorage.getItem("token");
+      // const res = await axios.post("/api/tweets", formData, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "multipart/form-data",
+      //   },
+      // });
+      await API.post('/tweets', formData, {
+        headers:{
           "Content-Type": "multipart/form-data",
         },
-      });
+      })
       setMessage("Tweet posted!");
       setText("");
       setFile(null);
+      onTweetPosted?.();
     } catch (err) {
       setMessage(err.response?.data?.message || "Error posting Tweet");
     }
@@ -45,7 +52,7 @@ function TweetCard() {
         <input type="file" onChange={handleFileChange} />
         <button type="submit">Tweet</button>
       </form>
-      {message & <p>{message}</p>}
+      {message && <p>{message}</p>}
     </div>
   );
 }
