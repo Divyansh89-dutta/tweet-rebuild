@@ -26,7 +26,9 @@ function Home() {
   useEffect(() => {
     if (user?.token) {
       fetchTimeline();
+
       socket.connect();
+
       socket.on("newTweet", (tweet) => {
         setTweets((prev) => [tweet, ...prev]);
       });
@@ -35,8 +37,14 @@ function Home() {
         setTweets((prev) =>
           prev.map((t) => {
             if (t._id === updatedTweet._id) {
-              return updatedTweet;
+              return {
+                ...updatedTweet,
+                replies: updatedTweet.replies?.length
+                  ? updatedTweet.replies
+                  : t.replies,
+              };
             }
+
             return {
               ...t,
               replies:
@@ -90,7 +98,12 @@ function Home() {
       ) : tweets.length === 0 ? (
         <p>No tweets yet.</p>
       ) : (
-        tweets.map((tweet) => <TweetItem key={tweet._id} tweet={tweet} />)
+        tweets
+          .filter(
+            (tweet) =>
+              !tweet.parent || (tweet.parent && tweet.content?.trim() !== "")
+          ) // shows original tweets + quote retweets
+          .map((tweet) => <TweetItem key={tweet._id} tweet={tweet} />)
       )}
     </div>
   );

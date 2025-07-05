@@ -28,9 +28,12 @@ function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-[#16181C] rounded-2xl p-8 space-y-6">
-        {/* Logo/Header */}
+    <div className="min-h-screen bg-gradient-to-br from-black via-[#0d0d0d] to-black flex items-center justify-center p-4 relative overflow-hidden">
+      {/* background light effects */}
+      <div className="absolute w-72 h-72 bg-sky-500/20 rounded-full blur-3xl top-10 left-10"></div>
+      <div className="absolute w-96 h-96 bg-fuchsia-600/10 rounded-full blur-2xl bottom-10 right-10"></div>
+
+      <div className="w-full max-w-md z-10  border border-gray-800 rounded-2xl p-8 shadow-xl backdrop-blur-sm space-y-6">
         <div className="flex justify-center">
           <svg
             viewBox="0 0 24 24"
@@ -47,72 +50,35 @@ function Register() {
           Create your account
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="text-gray-400 text-sm">Name</label>
-            <input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              required
-              placeholder="Your full name"
-              className="w-full p-3 rounded-md bg-[#202327] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500"
-            />
-          </div>
-          <div>
-            <label className="text-gray-400 text-sm">Username</label>
-            <input
-              name="username"
-              value={form.username}
-              onChange={handleChange}
-              required
-              placeholder="Your username"
-              className="w-full p-3 rounded-md bg-[#202327] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500"
-            />
-          </div>
-          <div>
-            <label className="text-gray-400 text-sm">Email</label>
-            <input
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
-              required
-              placeholder="Your email"
-              className="w-full p-3 rounded-md bg-[#202327] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500"
-            />
-          </div>
-          <div>
-            <label className="text-gray-400 text-sm">Password</label>
-            <input
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              required
-              placeholder="*************"
-              className="w-full p-3 rounded-md bg-[#202327] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500"
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {["name", "username", "email", "password"].map((field) => (
+            <div key={field}>
+              <label className="text-gray-400 text-sm capitalize">{field}</label>
+              <input
+                type={field === "email" ? "email" : field === "password" ? "password" : "text"}
+                name={field}
+                value={form[field]}
+                onChange={handleChange}
+                placeholder={`Enter your ${field}`}
+                required
+                className="w-full p-3 rounded-md  text-white placeholder-gray-500 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-500 transition"
+              />
+            </div>
+          ))}
 
           <button
             type="submit"
-            className="w-full py-3 rounded-full bg-sky-500 hover:bg-sky-600 transition duration-300 text-white font-bold"
+            className="w-full py-3 rounded-full bg-sky-500 hover:bg-sky-600 text-white font-bold transition shadow-md"
           >
             Sign Up
           </button>
         </form>
 
-        {message && (
-          <p className="text-red-500 text-center mt-2">{message}</p>
-        )}
+        {message && <p className="text-red-500 text-center">{message}</p>}
 
-        <p className="text-gray-400 text-center">
+        <p className="text-gray-400 text-center text-sm">
           Already have an account?{" "}
-          <Link
-            to="/login"
-            className="text-sky-400 hover:underline"
-          >
+          <Link to="/login" className="text-sky-400 hover:underline">
             Log in
           </Link>
         </p>

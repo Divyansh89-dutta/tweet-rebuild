@@ -20,13 +20,6 @@ function TweetCard({ onTweetPosted }) {
       formData.append("media", file);
     }
     try {
-      // const token = localStorage.getItem("token");
-      // const res = await axios.post("/api/tweets", formData, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     "Content-Type": "multipart/form-data",
-      //   },
-      // });
       await API.post('/tweets', formData, {
         headers:{
           "Content-Type": "multipart/form-data",

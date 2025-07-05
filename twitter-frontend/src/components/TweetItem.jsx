@@ -1,31 +1,60 @@
 import React, { useState } from "react";
 import API from "../api/axios";
+import RetweetModel from './RetweetModel';  
 
 function TweetItem({ tweet, onUpdate }) {
   const [replyText, setReplyText] = useState("");
+  const [showRetweetModal, setShowRetweetModal] = useState(false);
 
   const handleLike = async () => {
-    const res = await API.post(`/tweets/${tweet._id}/like`);
-    onUpdate?.(res.data);
+    if (!tweet?._id) return alert("Tweet ID not found");
+    try{
+      const res = await API.post(`/tweets/${tweet._id}/like`);
+      onUpdate?.(res.data);
+    } catch (error) {
+      console.error("Error liking tweet:", error);
+      alert("Failed to like tweet. Please try again.");
+    }
   };
 
   const handleUnlike = async () => {
-    const res = await API.post(`/tweets/${tweet._id}/unlike`);
-    onUpdate?.(res.data);
-  };
-
-  const handleRetweet = async () => {
-    const res = await API.post(`/tweets/${tweet._id}/retweet`);
-    onUpdate?.(res.data);
+    if (!tweet?._id) return alert("Tweet ID not found");
+    try{
+      const res = await API.post(`/tweets/${tweet._id}/unlike`);
+      onUpdate?.(res.data);
+    } catch (error) {
+      console.error("Error unliking tweet:", error);
+      alert("Failed to unlike tweet. Please try again.");
+    }
   };
 
   const handleReply = async (e) => {
     e.preventDefault();
     if (!replyText.trim()) return;
-    const res = await API.post(`/tweets/${tweet._id}/reply`, { content: replyText });
-    setReplyText("");
-    onUpdate?.(res.data, "reply");
+    try{
+      const res = await API.post(`/tweets/${tweet._id}/reply`, { content: replyText });
+      setReplyText("");
+      onUpdate?.(res.data, "reply");
+    } catch (error) {
+      console.error("Error replying to tweet:", error);
+      alert("Failed to reply. Please try again.");
+    }
   };
+
+  const handleRetweetSubmit = async () => {
+    if (!tweet?._id) return alert("Tweet ID not found");
+    try{
+      const res = await API.post(`/tweets/${tweet._id}/retweet`, { content });
+      setShowRetweetModal(false);
+      onUpdate?.(res.data);
+    } catch (error) {
+      console.error("Error retweeting:", error);
+      alert("Failed to retweet. Please try again.");
+    }
+  };
+
+  const isRetweet = tweet.parent && tweet.parent.user;
+
 
   return (
     <div
@@ -33,14 +62,33 @@ function TweetItem({ tweet, onUpdate }) {
         border: "1px solid #ddd",
         padding: "10px",
         marginBottom: "10px",
-        marginLeft: tweet.parent ? "20px" : "0",
-        backgroundColor: tweet.parent ? "#f9f9f9" : "#fff",
+        marginLeft: isRetweet ? "20px" : "0",
+        backgroundColor: isRetweet ? "#f9f9f9" : "#fff",
       }}
     >
+      {/* Parent Tweet Display (for quote retweets) */}
+      {isRetweet && (
+        <div
+          style={{
+            border: "1px solid #ccc",
+            padding: "8px",
+            backgroundColor: "#f0f0f0",
+            marginBottom: "10px",
+          }}
+        >
+          <strong>
+            @{tweet.parent.user?.username} ({tweet.parent.user?.name})
+          </strong>
+          <div>{tweet.parent.content}</div>
+        </div>
+      )}
+
+      {/* Tweet Content */}
       <div style={{ fontWeight: "bold" }}>
         @{tweet.user?.username} ({tweet.user?.name})
       </div>
       <div>{tweet.content}</div>
+
       {tweet.media && (
         <img
           src={tweet.media}
@@ -48,8 +96,11 @@ function TweetItem({ tweet, onUpdate }) {
           style={{ maxWidth: "300px", marginTop: "10px" }}
         />
       )}
+
       <div style={{ fontSize: "0.8em", color: "#666" }}>
-        {new Date(tweet.createdAt).toLocaleString()}
+        {tweet.createdAt
+          ? new Date(tweet.createdAt).toLocaleString()
+          : "Invalid Date"}
       </div>
 
       {/* Actions */}
@@ -58,9 +109,14 @@ function TweetItem({ tweet, onUpdate }) {
         <button onClick={handleUnlike} style={{ marginLeft: "8px" }}>
           Unlike
         </button>
-        <button onClick={handleRetweet} style={{ marginLeft: "8px" }}>
-          Retweet
-        </button>
+        {!isRetweet && (
+          <button
+            onClick={() => setShowRetweetModal(true)}
+            style={{ marginLeft: "8px" }}
+          >
+            Retweet
+          </button>
+        )}
         <span style={{ marginLeft: "10px" }}>
           Likes: {tweet.likes?.length || 0}
         </span>
@@ -78,8 +134,8 @@ function TweetItem({ tweet, onUpdate }) {
         <button type="submit">Reply</button>
       </form>
 
-      {/* Replies */}
-      {tweet.replies?.length > 0 && (
+      {/* Replies — only show if tweet is original or reply (not a retweet) */}
+      {tweet.replies?.length > 0 && !tweet.parent?.parent && (
         <div
           style={{
             marginTop: "10px",
@@ -93,26 +149,30 @@ function TweetItem({ tweet, onUpdate }) {
               key={reply._id}
               tweet={reply}
               onUpdate={(updatedReply, type) => {
+                if (!updatedReply?._id) return;
+
                 if (type === "reply") {
                   const updatedReplies = [...(tweet.replies || []), updatedReply];
                   onUpdate?.({ ...tweet, replies: updatedReplies });
                 } else {
-                  const index = tweet.replies.findIndex(
-                    (r) => r._id === updatedReply._id
+                  const updatedReplies = (tweet.replies || []).map((r) =>
+                    r._id === updatedReply._id ? updatedReply : r
                   );
-                  if (index !== -1) {
-                    const updatedReplies = [
-                      ...tweet.replies.slice(0, index),
-                      updatedReply,
-                      ...tweet.replies.slice(index + 1),
-                    ];
-                    onUpdate?.({ ...tweet, replies: updatedReplies });
-                  }
+                  onUpdate?.({ ...tweet, replies: updatedReplies });
                 }
               }}
             />
           ))}
         </div>
+      )}
+
+      {/* Retweet Modal */}
+      {showRetweetModal && (
+        <RetweetModel
+          tweet={tweet}
+          onClose={() => setShowRetweetModal(false)}
+          onSubmit={handleRetweetSubmit}
+        />
       )}
     </div>
   );
