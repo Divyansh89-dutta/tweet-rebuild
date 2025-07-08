@@ -1,21 +1,19 @@
 import React, { useState } from "react";
 import API from "../api/axios";
 import RetweetModal from "./RetweetModel";
-import { Heart, Repeat2 } from "lucide-react";
-import { motion } from "framer-motion";
 
 function TweetItem({ tweet, onUpdate }) {
   const [replyText, setReplyText] = useState("");
   const [showRetweetModal, setShowRetweetModal] = useState(false);
-  const [likeAnimating, setLikeAnimating] = useState(false);
+
+  const loggedInUser = JSON.parse(localStorage.getItem('user'));
+  const isSaved = tweet.savedBy?.includes(loggedInUser?._id);
 
   const handleLike = async () => {
     if (!tweet?._id) return alert("Tweet ID is missing");
     try {
-      setLikeAnimating(true);
       const res = await API.post(`/tweets/${tweet._id}/like`);
       onUpdate?.(res.data);
-      setTimeout(() => setLikeAnimating(false), 300); // reset animation
     } catch (err) {
       console.error("Like error:", err);
     }
@@ -24,10 +22,8 @@ function TweetItem({ tweet, onUpdate }) {
   const handleUnlike = async () => {
     if (!tweet?._id) return alert("Tweet ID is missing");
     try {
-      setLikeAnimating(true);
       const res = await API.post(`/tweets/${tweet._id}/unlike`);
       onUpdate?.(res.data);
-      setTimeout(() => setLikeAnimating(false), 300); // reset animation
     } catch (err) {
       console.error("Unlike error:", err);
     }
@@ -58,102 +54,122 @@ function TweetItem({ tweet, onUpdate }) {
     }
   };
 
+  const handleSave = async () => {
+    if (!tweet?._id) return alert("Tweet ID is missing");
+    try {
+      const res = await API.post(`/tweets/${tweet._id}/save`);
+      onUpdate?.(res.data);
+    } catch (err) {
+      console.error("Save error:", err);
+    }
+  };
+
+  const handleUnsave = async () => {
+    if (!tweet?._id) return alert("Tweet ID is missing");
+    try {
+      const res = await API.post(`/tweets/${tweet._id}/unsave`);
+      onUpdate?.(res.data);
+    } catch (err) {
+      console.error("Unsave error:", err);
+    }
+  };
+
   const isRetweet = tweet.parent && tweet.parent.user;
 
   return (
     <div
-      className={`bg-gray-800 rounded-xl p-4 mb-4 shadow-sm ${
-        isRetweet ? "ml-6 border-l-4 border-blue-500" : ""
-      }`}
+      style={{
+        border: "1px solid #ddd",
+        padding: "10px",
+        marginBottom: "10px",
+        marginLeft: isRetweet ? "20px" : "0",
+        backgroundColor: isRetweet ? "#f9f9f9" : "#fff",
+      }}
     >
+      {/* Parent Tweet Display (for quote retweets) */}
       {isRetweet && (
-        <div className="bg-gray-700 p-3 rounded-lg mb-3 text-sm text-gray-300">
-          <p className="font-semibold text-blue-400">
+        <div
+          style={{
+            border: "1px solid #ccc",
+            padding: "8px",
+            backgroundColor: "#f0f0f0",
+            marginBottom: "10px",
+          }}
+        >
+          <strong>
             @{tweet.parent.user?.username} ({tweet.parent.user?.name})
-          </p>
-          <p>{tweet.parent.content}</p>
+          </strong>
+          <div>{tweet.parent.content}</div>
         </div>
       )}
 
-      <div className="text-gray-200 font-semibold mb-1">
-        @{tweet.user?.username}{" "}
-        <span className="text-gray-400 font-normal">
-          ({tweet.user?.name})
-        </span>
+      {/* Tweet Content */}
+      <div style={{ fontWeight: "bold" }}>
+        @{tweet.user?.username} ({tweet.user?.name})
       </div>
-
-      <p className="text-gray-100 mb-2">{tweet.content}</p>
+      <div>{tweet.content}</div>
 
       {tweet.media && (
         <img
           src={tweet.media}
           alt="tweet media"
-          className="w-full max-w-sm rounded-md mt-2 mb-2"
+          style={{ maxWidth: "300px", marginTop: "10px" }}
         />
       )}
 
-      <div className="text-xs text-gray-400">
+      <div style={{ fontSize: "0.8em", color: "#666" }}>
         {tweet.createdAt
           ? new Date(tweet.createdAt).toLocaleString()
           : "Invalid Date"}
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-4 text-sm mt-3">
-        <motion.button
-          onClick={handleLike}
-          className="flex items-center text-gray-300 hover:text-red-400"
-          animate={likeAnimating ? { scale: 1.3 } : { scale: 1 }}
-          transition={{ type: "spring", stiffness: 300, damping: 10 }}
-        >
-          <Heart className="w-4 h-4 mr-1" />
-          <span>Like</span>
-          <span className="ml-2 text-gray-400">
-            ({tweet.likes?.length || 0})
-          </span>
-        </motion.button>
-
-        <motion.button
-          onClick={handleUnlike}
-          className="text-gray-300 hover:text-yellow-400"
-          animate={likeAnimating ? { scale: 1.2 } : { scale: 1 }}
-          transition={{ type: "spring", stiffness: 300, damping: 10 }}
-        >
+      <div style={{ marginTop: "10px" }}>
+        <button onClick={handleLike}>Like</button>
+        <button onClick={handleUnlike} style={{ marginLeft: "8px" }}>
           Unlike
-        </motion.button>
-
+        </button>
         {!isRetweet && (
           <button
             onClick={() => setShowRetweetModal(true)}
-            className="flex items-center text-gray-300 hover:text-green-400"
+            style={{ marginLeft: "8px" }}
           >
-            <Repeat2 className="w-4 h-4 mr-1" />
             Retweet
           </button>
         )}
+        <button
+          onClick={isSaved ? handleUnsave : handleSave}
+          style={{ marginLeft: "8px" }}
+        >
+          {isSaved ? "Unsave" : "Save"}
+        </button>
+        <span style={{ marginLeft: "10px" }}>
+          Likes: {tweet.likes?.length || 0}
+        </span>
       </div>
 
-      {/* Reply Input */}
-      <form onSubmit={handleReply} className="mt-4 flex gap-2">
+      {/* Reply Form */}
+      <form onSubmit={handleReply} style={{ marginTop: "10px" }}>
         <input
           type="text"
           placeholder="Reply..."
           value={replyText}
           onChange={(e) => setReplyText(e.target.value)}
-          className="flex-grow bg-gray-700 text-sm text-gray-100 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          style={{ width: "60%", marginRight: "8px" }}
         />
-        <button
-          type="submit"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
-        >
-          Reply
-        </button>
+        <button type="submit">Reply</button>
       </form>
 
       {/* Replies */}
       {tweet.replies?.length > 0 && !tweet.parent?.parent && (
-        <div className="mt-4 border-l-2 border-gray-600 pl-4 space-y-4">
-          <p className="text-gray-400 text-sm font-semibold">Replies:</p>
+        <div
+          style={{
+            marginTop: "10px",
+            borderLeft: "2px solid #ddd",
+            paddingLeft: "10px",
+          }}
+        >
+          <strong>Replies:</strong>
           {tweet.replies.map((reply) => (
             <TweetItem
               key={reply._id}
@@ -176,7 +192,6 @@ function TweetItem({ tweet, onUpdate }) {
         </div>
       )}
 
-      {/* Retweet Modal */}
       {showRetweetModal && (
         <RetweetModal
           tweet={tweet}

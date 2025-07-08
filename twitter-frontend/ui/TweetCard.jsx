@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import API from "../api/axios";
-import { ImageIcon } from "lucide-react";
 
 function TweetCard({ onTweetPosted }) {
   const [text, setText] = useState("");
@@ -37,42 +36,18 @@ function TweetCard({ onTweetPosted }) {
   };
 
   return (
-    <div className="bg-gray-800 rounded-2xl p-4 shadow-md text-gray-100 space-y-4">
-      <h2 className="text-lg font-semibold">Post a Tweet</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div>
+      <h2>Post a Tweet</h2>
+      <form onSubmit={handleSubmit}>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="What's happening?"
-          className="w-full p-3 rounded-xl bg-gray-700 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-          rows={3}
         ></textarea>
-
-        <div className="flex items-center justify-between">
-          <label className="cursor-pointer flex items-center gap-2 text-blue-400 hover:text-blue-300">
-            <ImageIcon className="w-5 h-5" />
-            <span className="text-sm">Add image</span>
-            <input type="file" onChange={handleFileChange} className="hidden" />
-          </label>
-
-          <button
-            type="submit"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-medium shadow"
-          >
-            Tweet
-          </button>
-        </div>
+        <input type="file" onChange={handleFileChange} />
+        <button type="submit">Tweet</button>
       </form>
-
-      {message && (
-        <p
-          className={`text-sm ${
-            message.includes("Error") ? "text-red-400" : "text-green-400"
-          }`}
-        >
-          {message}
-        </p>
-      )}
+      {message && <p>{message}</p>}
     </div>
   );
 }
