@@ -9,6 +9,7 @@ import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/authRoutes.js';
 import userRouter from './routes/userRoutes.js';
 import tweetRoute from './routes/tweetRoutes.js';
+import searchRoutes from './routes/searchRoutes.js';
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use(limiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRouter);
 app.use('/api/tweets', tweetRoute);
+app.use('/api/search', searchRoutes)
 
 // Export app
 export default app;

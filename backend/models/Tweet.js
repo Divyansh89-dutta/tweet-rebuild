@@ -30,7 +30,11 @@ const tweetSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    savedBy: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }] 
 });
 
 export default mongoose.model('Tweet', tweetSchema);

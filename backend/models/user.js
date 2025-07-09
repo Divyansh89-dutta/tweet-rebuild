@@ -41,5 +41,11 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    website: String,
+    location: String,
+    tweets: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Tweet'
+    }]
 })
 export default mongoose.model('User', userSchema);
