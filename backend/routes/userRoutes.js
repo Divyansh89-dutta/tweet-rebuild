@@ -1,14 +1,15 @@
 import express from 'express';
-import { getUserProfile } from '../controllers/authController.js';
+import { getUserProfile, updateProfile } from '../controllers/authController.js';
 import { protect } from '../middlewares/authMiddlewars.js';
-import { followUser, unfollowUser } from '../controllers/userController.js';
+import { followUser, unfollowUser, getUserByUsername } from '../controllers/userController.js';
+import upload from '../middlewares/upload.js';
 
 const router = express.Router();
 
-// Get user profile by username
 router.get('/profile', protect, getUserProfile);
+router.put("/profile", protect, upload.single("avatar"), updateProfile);
 
-// Follow a user / unfollow a user
+router.get('/:username', protect, getUserByUsername);
 router.post('/:id/follow', protect, followUser);
 router.post('/:id/unfollow', protect, unfollowUser);
 

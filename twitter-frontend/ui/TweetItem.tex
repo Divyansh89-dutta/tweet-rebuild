@@ -6,9 +6,6 @@ function TweetItem({ tweet, onUpdate }) {
   const [replyText, setReplyText] = useState("");
   const [showRetweetModal, setShowRetweetModal] = useState(false);
 
-  const loggedInUser = JSON.parse(localStorage.getItem('user'));
-  const isSaved = tweet.savedBy?.includes(loggedInUser?._id);
-
   const handleLike = async () => {
     if (!tweet?._id) return alert("Tweet ID is missing");
     try {
@@ -51,26 +48,6 @@ function TweetItem({ tweet, onUpdate }) {
       onUpdate?.(res.data);
     } catch (err) {
       console.error("Retweet error:", err);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!tweet?._id) return alert("Tweet ID is missing");
-    try {
-      const res = await API.post(`/tweets/${tweet._id}/save`);
-      onUpdate?.(res.data);
-    } catch (err) {
-      console.error("Save error:", err);
-    }
-  };
-
-  const handleUnsave = async () => {
-    if (!tweet?._id) return alert("Tweet ID is missing");
-    try {
-      const res = await API.post(`/tweets/${tweet._id}/unsave`);
-      onUpdate?.(res.data);
-    } catch (err) {
-      console.error("Unsave error:", err);
     }
   };
 
@@ -137,12 +114,6 @@ function TweetItem({ tweet, onUpdate }) {
             Retweet
           </button>
         )}
-        <button
-          onClick={isSaved ? handleUnsave : handleSave}
-          style={{ marginLeft: "8px" }}
-        >
-          {isSaved ? "Unsave" : "Save"}
-        </button>
         <span style={{ marginLeft: "10px" }}>
           Likes: {tweet.likes?.length || 0}
         </span>
@@ -160,7 +131,7 @@ function TweetItem({ tweet, onUpdate }) {
         <button type="submit">Reply</button>
       </form>
 
-      {/* Replies */}
+      {/* Replies — only show if tweet is original or reply (not a retweet) */}
       {tweet.replies?.length > 0 && !tweet.parent?.parent && (
         <div
           style={{
@@ -192,6 +163,7 @@ function TweetItem({ tweet, onUpdate }) {
         </div>
       )}
 
+      {/* Retweet Modal */}
       {showRetweetModal && (
         <RetweetModal
           tweet={tweet}

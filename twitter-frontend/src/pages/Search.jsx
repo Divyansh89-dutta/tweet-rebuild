@@ -1,25 +1,23 @@
-import React, { useState } from 'react'
-import API from '../api/axios'
+import { useState } from 'react';
+import API from '../api/axios';
 import { useNavigate } from 'react-router-dom';
 
-function Search() {
-    const [q, setQ] = useState('');
-    const [results, setResults] = useState({
-        users: [],
-        tweets: []
-    })
-    const navigate = useNavigate();
+const Search = () => {
+  const [q, setQ] = useState('');
+  const [results, setResults] = useState({ users: [], tweets: [] });
+  const navigate = useNavigate();
 
-    const handleSearch = async(e) => {
-        e.preventDefault();
-        const res = await API.get(`/search?q=${q}`);
-        setResults(res.data);
-    }
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    const res = await API.get(`/search?q=${q}`);
+    setResults(res.data);
+  };
 
-    const handleUserClick = (username) => {
-        navigate(`/profile/${username}`);
-        console.log(`Navigating to profile of ${username}`);
-    }
+  const handleUserClick = (username) => {
+    console.log('Navigating to profile of', username);
+    navigate(`/profile/${username}`);
+  };
+
   return (
     <div className="max-w-2xl mx-auto p-4">
       <form onSubmit={handleSearch} className="flex gap-2 mb-4">
@@ -67,7 +65,7 @@ function Search() {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default Search
+export default Search;

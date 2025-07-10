@@ -1,40 +1,38 @@
-// app.js
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-
 import authRoutes from './routes/authRoutes.js';
 import userRouter from './routes/userRoutes.js';
 import tweetRoute from './routes/tweetRoutes.js';
 import searchRoutes from './routes/searchRoutes.js';
-
+import notificationRoutes from './routes/notificationRoutes.js';
 const app = express();
 
-// Middlewares
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
-  credentials: true,
+    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    credentials: true,
 }));
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(morgan('dev'));
 app.use(helmet());
 
-// Rate Limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
+    windowMs: 15 * 60 * 1000,
+    max: 100,
 });
 app.use(limiter);
 
-// Routes
+
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRouter);
 app.use('/api/tweets', tweetRoute);
-app.use('/api/search', searchRoutes)
+app.use('/api/search', searchRoutes);
+app.use('/api/notifications', notificationRoutes);
+// app.use(errorHandler);
 
-// Export app
 export default app;

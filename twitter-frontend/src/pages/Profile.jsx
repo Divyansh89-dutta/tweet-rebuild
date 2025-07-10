@@ -1,23 +1,46 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
-import API from '../api/axios';
+import React, { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
+import API from "../api/axios";
+import MyTweetsPage from "../components/MyTweetsPage";
+import SavedTweetsPage from "../components/SavedTweetsPage";
 
 function Profile() {
   const { user, logout } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    name: "",
+    bio: "",
+    location: "",
+    website: "",
+  });
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [activeTab, setActiveTab] = useState("tweets");
 
+  useEffect(() => {
+    if (!user || !user.token) {
+      window.location.href = "/login";
+    }
+  })
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      setError("");
       const res = await API.get("/users/profile");
       setProfile(res.data);
+      setEditData({
+        name: res.data.name || "",
+        bio: res.data.bio || "",
+        location: res.data.location || "",
+        website: res.data.website || "",
+      });
+      setAvatarPreview(res.data.avatar || "");
     } catch (err) {
-      console.error("Failed to fetch profile:", err);
-      setError("Failed to fetch profile. Please try again.");
+      console.error(err);
+      setError("Failed to fetch profile.");
     } finally {
       setLoading(false);
     }
@@ -27,66 +50,187 @@ function Profile() {
     fetchProfile();
   }, []);
 
+  const handleEditChange = (e) => {
+    setEditData({ ...editData, [e.target.name]: e.target.value });
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("name", editData.name);
+      formData.append("bio", editData.bio);
+      formData.append("location", editData.location);
+      formData.append("website", editData.website);
+
+      if (avatarFile) {
+        formData.append("avatar", avatarFile);
+      }
+
+      await API.put("/users/profile", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      setEditing(false);
+      fetchProfile();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update profile.");
+    }
+  };
+
+  if (loading) return <p className="text-center text-gray-400">Loading...</p>;
+  if (error) return <p className="text-center text-red-500">{error}</p>;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black  text-white flex flex-col items-center px-4 pt-12">
-      {/* Nav */}
-      <nav className="mb-8 text-sm space-x-4">
-        <Link to="/home" className="text-sky-400 hover:underline">Home</Link>
+    <div className="min-h-screen bg-black text-white px-4 pt-12">
+      <nav className="mb-8 text-sm space-x-4 text-center">
+        <Link to="/home" className="text-sky-400 hover:underline">
+          Home
+        </Link>
         <span className="text-gray-500">|</span>
-        <Link to="/profile" className="text-sky-400 hover:underline">Profile</Link>
+        <Link to="/profile" className="text-sky-400 hover:underline">
+          Profile
+        </Link>
       </nav>
 
-      <h1 className="text-3xl font-bold mb-6">My Profile</h1>
-
-      {loading && <p className="text-gray-400">Loading...</p>}
-      {error && <p className="text-red-500">{error}</p>}
-
       {profile && (
-        <div className="w-full max-w-md  p-6 rounded-2xl shadow-lg border border-gray-800 space-y-4">
-          {/* Avatar */}
-          <div className="flex justify-center">
-            {profile.avatar ? (
+        <div className="max-w-2xl mx-auto bg-[#16181C] p-6 rounded-xl border border-gray-700">
+          <div className="text-center mb-6">
+            {avatarPreview ? (
               <img
-                src={profile.avatar}
+                src={avatarPreview}
                 alt="avatar"
-                className="w-28 h-28 rounded-full object-cover border border-gray-700"
+                className="w-28 h-28 rounded-full mx-auto object-cover border border-gray-700"
               />
             ) : (
-              <div className="w-28 h-28 rounded-full bg-gray-700 flex items-center justify-center text-4xl text-gray-300 font-bold">
+              <div className="w-28 h-28 rounded-full bg-gray-700 mx-auto flex items-center justify-center text-4xl">
                 ?
               </div>
             )}
+
+            {editing ? (
+              <>
+                <label className="block mt-4 text-gray-300">
+                  Avatar:
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    className="block mt-2 text-gray-400"
+                  />
+                </label>
+
+                <input
+                  name="name"
+                  value={editData.name}
+                  onChange={handleEditChange}
+                  placeholder="Name"
+                  className="w-full mt-2 p-2 rounded bg-gray-800 text-white"
+                />
+                <input
+                  name="bio"
+                  value={editData.bio}
+                  onChange={handleEditChange}
+                  placeholder="Bio"
+                  className="w-full mt-2 p-2 rounded bg-gray-800 text-white"
+                />
+                <input
+                  name="location"
+                  value={editData.location}
+                  onChange={handleEditChange}
+                  placeholder="Location"
+                  className="w-full mt-2 p-2 rounded bg-gray-800 text-white"
+                />
+                <input
+                  name="website"
+                  value={editData.website}
+                  onChange={handleEditChange}
+                  placeholder="Website"
+                  className="w-full mt-2 p-2 rounded bg-gray-800 text-white"
+                />
+
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={handleSave}
+                    className="flex-1 bg-green-600 p-2 rounded"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => setEditing(false)}
+                    className="flex-1 bg-gray-600 p-2 rounded"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-xl font-semibold mt-2">{profile.name}</p>
+                <p className="text-gray-400">@{profile.username}</p>
+                <p className="text-sm">{profile.bio}</p>
+                <p className="text-sm text-gray-500">{profile.location}</p>
+                {profile.website && (
+                  <a
+                    href={profile.website}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sky-400 hover:underline"
+                  >
+                    {profile.website}
+                  </a>
+                )}
+                <button
+                  onClick={() => setEditing(true)}
+                  className="block mt-4 mx-auto px-4 py-2 bg-blue-600 rounded"
+                >
+                  Edit Profile
+                </button>
+              </>
+            )}
           </div>
 
-          {/* Details */}
-          <div className="text-center space-y-2">
-            <p className="text-xl font-semibold">{profile.name || "Unnamed"}</p>
-            <p className="text-sm text-gray-400">@{profile.username}</p>
-            <p className="text-sm text-gray-300">{profile.email}</p>
-            <p className="text-sm italic text-gray-400">{profile.bio || "No bio yet."}</p>
+          {/* Tabs */}
+          <div className="flex justify-center gap-4 mb-4">
+            <button
+              onClick={() => setActiveTab("tweets")}
+              className={`${
+                activeTab === "tweets"
+                  ? "border-b-2 border-sky-500 text-sky-400"
+                  : "text-gray-400"
+              } pb-1`}
+            >
+              My Tweets
+            </button>
+            <button
+              onClick={() => setActiveTab("saved")}
+              className={`${
+                activeTab === "saved"
+                  ? "border-b-2 border-sky-500 text-sky-400"
+                  : "text-gray-400"
+              } pb-1`}
+            >
+              Saved Tweets
+            </button>
           </div>
 
-          {/* Stats */}
-          <div className="flex justify-around text-sm mt-4 text-center">
-            <div>
-              <p className="font-bold">{profile.followers?.length || 0}</p>
-              <p className="text-gray-400">Followers</p>
-            </div>
-            <div>
-              <p className="font-bold">{profile.following?.length || 0}</p>
-              <p className="text-gray-400">Following</p>
-            </div>
-          </div>
+          {activeTab === "tweets" ? (
+            <MyTweetsPage tweets={profile.tweets} />
+          ) : (
+            <SavedTweetsPage savedTweets={profile.savedTweets} />
+          )}
 
-          {/* Joined Date */}
-          <p className="text-xs text-center text-gray-500 mt-2">
-            Joined: {new Date(profile.createdAt).toLocaleDateString()}
-          </p>
-
-          {/* Logout */}
           <button
             onClick={logout}
-            className="w-full mt-4 py-2 bg-red-600 hover:bg-red-700 rounded-md font-semibold transition"
+            className="mt-6 w-full py-2 bg-red-600 rounded"
           >
             Logout
           </button>

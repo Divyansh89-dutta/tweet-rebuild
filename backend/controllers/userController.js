@@ -1,4 +1,6 @@
+
 import User from '../models/user.js';
+import Tweet from '../models/Tweet.js';
 
 export const followUser = async (req, res) => {
   try {
@@ -12,17 +14,20 @@ export const followUser = async (req, res) => {
     const user = await User.findById(userId);
     const targetUser = await User.findById(targetId);
 
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
     if (!targetUser) {
       return res.status(404).json({ message: 'Target user not found' });
     }
 
-    // Convert IDs to string for comparison
     const isAlreadyFollowing = user.following.some(
       (id) => id.toString() === targetId
     );
 
     if (isAlreadyFollowing) {
-      return res.status(400).json({ message: 'You are already following this user' });
+      return res.status(400).json({ message: 'Already following this user' });
     }
 
     user.following.push(targetUser._id);
@@ -46,12 +51,8 @@ export const unfollowUser = async (req, res) => {
     const user = await User.findById(userId);
     const targetUser = await User.findById(targetId);
 
-    if (!user) {
+    if (!user || !targetUser) {
       return res.status(404).json({ message: 'User not found' });
-    }
-
-    if (!targetUser) {
-      return res.status(404).json({ message: 'Target user not found' });
     }
 
     const isFollowing = user.following.some(
@@ -59,7 +60,7 @@ export const unfollowUser = async (req, res) => {
     );
 
     if (!isFollowing) {
-      return res.status(400).json({ message: 'You are not following this user.' });
+      return res.status(400).json({ message: 'Not following this user' });
     }
 
     user.following = user.following.filter(
@@ -79,4 +80,28 @@ export const unfollowUser = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+export const getUserByUsername = async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.params.username })
+      .populate('followers', '_id username name')
+      .populate('following', '_id username name');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const tweets = await Tweet.find({ user: user._id });
+
+    const userData = user.toObject();
+    userData.tweets = tweets;
+
+    res.json(userData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
 

@@ -2,25 +2,41 @@ import express from 'express';
 import { protect } from '../middlewares/authMiddlewars.js';
 import multer from 'multer';
 import { storage } from '../utils/cloudinary.js';
-import { createTweet, likeTweet, unlikeTweet, retweet, replyToTweet, getTimeline } from '../controllers/tweetController.js';
+import {
+  createTweet,
+  likeTweet,
+  unlikeTweet,
+  retweet,
+  replyToTweet,
+  getTimeline,
+  saveTweet,
+  unsaveTweet,
+  deleteTweet,
+  editTweet,
+  getTweetById
+} from '../controllers/tweetController.js';
 
 const router = express.Router();
 const upload = multer({ storage });
 
+// ✅ Timeline routes first
+router.get('/timeline', protect, getTimeline);
+
+
+// ✅ Tweet creation
 router.post('/', protect, upload.single('media'), createTweet);
 
-// like and unlike a tweet
+// ✅ Tweet actions
 router.post('/:id/like', protect, likeTweet);
 router.post('/:id/unlike', protect, unlikeTweet);
-
-// retweet
 router.post('/:id/retweet', protect, retweet);
-
-// reply to a tweet
 router.post('/:id/reply', protect, upload.single('media'), replyToTweet);
 
+router.post("/:id/save", protect, saveTweet);
+router.post("/:id/unsave", protect, unsaveTweet);
+router.delete("/:id", protect, deleteTweet);
+router.put("/:id", protect, editTweet);
+router.get("/:id", getTweetById);
 
-// getTimesline 
-router.get('/timeline', protect, getTimeline);
 
 export default router;

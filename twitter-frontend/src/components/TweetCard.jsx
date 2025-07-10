@@ -1,6 +1,5 @@
+import React, { useState } from "react";
 import API from "../api/axios";
-import React from "react";
-import { useState } from "react";
 
 function TweetCard({ onTweetPosted }) {
   const [text, setText] = useState("");
@@ -19,29 +18,32 @@ function TweetCard({ onTweetPosted }) {
     if (file) {
       formData.append("media", file);
     }
+
     try {
-      await API.post('/tweets', formData, {
-        headers:{
+      await API.post("/tweets", formData, {
+        headers: {
           "Content-Type": "multipart/form-data",
         },
-      })
+      });
       setMessage("Tweet posted!");
       setText("");
       setFile(null);
       onTweetPosted?.();
     } catch (err) {
+      console.error(err);
       setMessage(err.response?.data?.message || "Error posting Tweet");
     }
   };
+
   return (
     <div>
-      <h2>Post a tweet</h2>
+      <h2>Post a Tweet</h2>
       <form onSubmit={handleSubmit}>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="What's happening?"
-        />
+        ></textarea>
         <input type="file" onChange={handleFileChange} />
         <button type="submit">Tweet</button>
       </form>

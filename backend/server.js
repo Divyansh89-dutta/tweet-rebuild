@@ -1,4 +1,3 @@
-// server.js
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -10,26 +9,30 @@ import client from './utils/redisClient.js';
 
 const PORT = process.env.PORT || 5000;
 
-// Create HTTP server
 const server = http.createServer(app);
 
-// Socket.IO Setup
 export const io = new Server(server, {
   cors: {
     origin: process.env.CLIENT_URL || "http://localhost:3000",
     credentials: true,
+    methods: ['GET', 'POST'],
   },
 });
 
+global.io = io; 
+
 io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id);
+   console.log('User connected:', socket.id);
+
+  socket.on('join', (userId) => {
+    socket.join(userId); // user joins their own room
+  });
 
   socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
+    console.log('User disconnected:', socket.id);
   });
 });
 
-// Start Server After DB Connection
 connectDB().then(async () => {
   await client.connect();
   console.log('Connected to MongoDB and Redis');

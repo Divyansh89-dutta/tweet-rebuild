@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { Navigate, Link } from "react-router-dom";
 import API from "../api/axios";
-import { Link } from "react-router-dom";
 import TweetCard from "../components/TweetCard";
 import TweetItem from "../components/TweetItem";
 import socket from "../utils/socket";
@@ -10,6 +10,10 @@ function Home() {
   const { user } = useAuth();
   const [tweets, setTweets] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  if (!user || !user.token) {
+    return <Navigate to="/login" replace />;
+  }
 
   const fetchTimeline = async () => {
     try {
@@ -24,72 +28,71 @@ function Home() {
   };
 
   useEffect(() => {
-    if (user?.token) {
-      fetchTimeline();
+    fetchTimeline();
 
-      socket.connect();
+    socket.connect();
 
-      socket.on("newTweet", (tweet) => {
-        setTweets((prev) => [tweet, ...prev]);
-      });
+    socket.on("newTweet", (tweet) => {
+      setTweets((prev) => [tweet, ...prev]);
+    });
 
-      socket.on("likeUpdated", (updatedTweet) => {
-        setTweets((prev) =>
-          prev.map((t) => {
-            if (t._id === updatedTweet._id) {
-              return {
-                ...updatedTweet,
-                replies: updatedTweet.replies?.length
-                  ? updatedTweet.replies
-                  : t.replies,
-              };
-            }
+    socket.on("likeUpdated", (updatedTweet) => {
+      setTweets((prev) =>
+        prev.map((t) => (t._id === updatedTweet._id ? updatedTweet : t))
+      );
+    });
 
+    socket.on("retweetCreated", (retweet) => {
+      setTweets((prev) => [retweet, ...prev]);
+    });
+
+    socket.on("replyCreated", (reply) => {
+      setTweets((prev) =>
+        prev.map((t) => {
+          if (t._id === reply.parent) {
             return {
               ...t,
-              replies:
-                t.replies?.map((r) =>
-                  r._id === updatedTweet._id ? updatedTweet : r
-                ) || [],
+              replies: [...(t.replies || []), reply],
             };
-          })
-        );
-      });
+          }
+          return t;
+        })
+      );
+    });
 
-      socket.on("retweetCreated", (retweet) => {
-        setTweets((prev) => [retweet, ...prev]);
-      });
+    socket.on("retweetUpdated", (updatedRetweet) => {
+      setTweets((prev) =>
+        prev.map((t) => (t._id === updatedRetweet._id ? updatedRetweet : t))
+      );
+    });
 
-      socket.on("replyCreated", (reply) => {
-        setTweets((prev) =>
-          prev.map((t) => {
-            if (t._id === reply.parent) {
-              return {
-                ...t,
-                replies: [...(t.replies || []), reply],
-              };
-            }
-            return t;
-          })
-        );
-      });
+    return () => {
+      socket.off("newTweet");
+      socket.off("likeUpdated");
+      socket.off("retweetCreated");
+      socket.off("replyCreated");
+      socket.off("retweetUpdated");
+      socket.disconnect();
+    };
+  }, []);
 
-      return () => {
-        socket.off("newTweet");
-        socket.off("likeUpdated");
-        socket.off("retweetCreated");
-        socket.off("replyCreated");
-        socket.disconnect();
-      };
-    }
-  }, [user]);
+  const handleTweetUpdate = (updatedTweet) => {
+    setTweets((prev) =>
+      prev.map((t) => (t._id === updatedTweet._id ? updatedTweet : t))
+    );
+  };
 
   return (
     <div>
-      <nav>
-        <Link to="/profile">Profile</Link>
+      <nav className="flex gap-4 p-2 bg-gray-100 border-b">
+        <Link to="/profile" className="text-blue-600 hover:underline">
+          Profile
+        </Link>
+        <Link to="/search" className="text-blue-600 hover:underline">
+          Search
+        </Link>
       </nav>
-      <h1>Timeline</h1>
+      <h1 className="text-2xl font-bold my-4">Timeline</h1>
 
       <TweetCard onTweetPosted={fetchTimeline} />
 
@@ -102,8 +105,14 @@ function Home() {
           .filter(
             (tweet) =>
               !tweet.parent || (tweet.parent && tweet.content?.trim() !== "")
-          ) // shows original tweets + quote retweets
-          .map((tweet) => <TweetItem key={tweet._id} tweet={tweet} />)
+          )
+          .map((tweet) => (
+            <TweetItem
+              key={tweet._id}
+              tweet={tweet}
+              onUpdate={handleTweetUpdate}
+            />
+          ))
       )}
     </div>
   );

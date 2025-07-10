@@ -21,10 +21,7 @@ const userSchema = new mongoose.Schema({
         required: true,
         select: false, // Do not return password in queries
     },
-    boi: {
-        type: String,
-        default: '',
-    },
+    bio: { type: String, default: "" },
     avatar: {
         type: String,
         default: '', // cloudinary image URL
@@ -43,9 +40,6 @@ const userSchema = new mongoose.Schema({
     },
     website: String,
     location: String,
-    tweets: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Tweet'
-    }]
+    tweets: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tweet' }]
 })
 export default mongoose.model('User', userSchema);
