@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
 import API from "../api/axios";
-import MyTweetsPage from "../components/MyTweetsPage";
+import MyTweetsPage from "../components/SavedTweetsPage";
 import SavedTweetsPage from "../components/SavedTweetsPage";
 
 function Profile() {
