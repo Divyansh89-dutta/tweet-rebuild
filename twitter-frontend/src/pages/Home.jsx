@@ -5,7 +5,7 @@ import API from "../api/axios";
 import TweetCard from "../components/TweetCard";
 import TweetItem from "../components/TweetItem";
 import socket from "../utils/socket";
-
+import Navbar from "../components/Navbar";
 function Home() {
   const { user } = useAuth();
   const [tweets, setTweets] = useState([]);
@@ -29,7 +29,6 @@ function Home() {
 
   useEffect(() => {
     fetchTimeline();
-
     socket.connect();
 
     socket.on("newTweet", (tweet) => {
@@ -48,15 +47,11 @@ function Home() {
 
     socket.on("replyCreated", (reply) => {
       setTweets((prev) =>
-        prev.map((t) => {
-          if (t._id === reply.parent) {
-            return {
-              ...t,
-              replies: [...(t.replies || []), reply],
-            };
-          }
-          return t;
-        })
+        prev.map((t) =>
+          t._id === reply.parent
+            ? { ...t, replies: [...(t.replies || []), reply] }
+            : t
+        )
       );
     });
 
@@ -83,23 +78,25 @@ function Home() {
   };
 
   return (
-    <div>
-      <nav className="flex gap-4 p-2 bg-gray-100 border-b">
-        <Link to="/profile" className="text-blue-600 hover:underline">
-          Profile
-        </Link>
-        <Link to="/search" className="text-blue-600 hover:underline">
-          Search
-        </Link>
-      </nav>
-      <h1 className="text-2xl font-bold my-4">Timeline</h1>
+    <div className="min-h-screen bg-gradient-to-b from-black  via-[#0f172a] to-[#1e293b] text-white px-5 py-4">
+      <div className="absolute top-0 left-0 w-60 h-60 bg-blue-500 opacity-30 blur-3xl rounded-full" />
+      <div className="absolute bottom-0 right-0 w-60 h-60 bg-fuchsia-600 opacity-30 blur-3xl rounded-full" />
+      <Navbar 
+        user={user} 
+       />
 
-      <TweetCard onTweetPosted={fetchTimeline} />
+      {/* Tweet Input Card */}
+      <div className="bg-[#0f172a] border border-gray-700 rounded-xl p-4 shadow-md">
+        <TweetCard onTweetPosted={fetchTimeline} />
+      </div>
+
+      {/* Tweet Feed */}
+      <h2 className="text-xl font-semibold mt-6 mb-4">Rajshree pan masala Swaad mein soch hai</h2>
 
       {loading ? (
-        <p>Loading tweets...</p>
+        <p className="text-gray-300">Loading tweets...</p>
       ) : tweets.length === 0 ? (
-        <p>No tweets yet.</p>
+        <p className="text-gray-400">No tweets yet.</p>
       ) : (
         tweets
           .filter(

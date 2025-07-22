@@ -6,7 +6,7 @@ const MyTweetPage = ({ tweets }) => {
   return tweets.map((tweet) => (
     <div
       key={tweet.id}
-      className="p-3 bg-[#16181c] rounded-lg border border-gay-800 mb-3"
+      className="p-3  rounded-lg border border-gay-800 mb-3"
     >
       <p>{tweet.content}</p>
       {tweet.media && (

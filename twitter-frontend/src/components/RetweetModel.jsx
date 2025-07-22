@@ -5,12 +5,15 @@ const modalStyle = {
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  backgroundColor: "#fff",
-  border: "1px solid #ccc",
+  backgroundColor: "#0f172a",
+  border: "1px solid #333",
   padding: "20px",
   zIndex: 1000,
-  width: "400px",
-  boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
+  width: "90%",
+  maxWidth: "500px",
+  borderRadius: "12px",
+  boxShadow: "0 8px 24px rgba(0,0,0,0.6)",
+  color: "#fff",
 };
 
 const overlayStyle = {
@@ -19,7 +22,7 @@ const overlayStyle = {
   left: 0,
   right: 0,
   bottom: 0,
-  backgroundColor: "rgba(0,0,0,0.3)",
+  backgroundColor: "rgba(0,0,0,0.6)",
   zIndex: 999,
 };
 
@@ -35,34 +38,40 @@ function RetweetModal({ tweet, onClose, onSubmit }) {
     <>
       <div style={overlayStyle} onClick={onClose}></div>
       <div style={modalStyle}>
-        <h3>Retweet with comment</h3>
+        <h2 className="text-lg font-semibold mb-4">Retweet with Comment</h2>
 
-        <div
-          style={{
-            border: "1px solid #ddd",
-            padding: "10px",
-            backgroundColor: "#f0f0f0",
-            marginBottom: "10px",
-          }}
-        >
-          <strong>
+        {/* Tweet Preview Box */}
+        <div className="bg-[#0F173A] border border-gray-700 rounded-md p-3 mb-4">
+          <strong className="block mb-1">
             @{tweet.user?.username} ({tweet.user?.name})
           </strong>
-          <p>{tweet.content}</p>
+          <p className="text-sm text-gray-300">{tweet.content}</p>
         </div>
 
+        {/* Textarea */}
         <form onSubmit={handleSubmit}>
           <textarea
             placeholder="Add your comment"
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            style={{ width: "100%", height: "60px", marginBottom: "10px" }}
+            className="w-full h-24 p-2 rounded-md bg-[#0F173A] border border-gray-700 text-white mb-4 resize-none"
           />
-          <div style={{ textAlign: "right" }}>
-            <button type="button" onClick={onClose} style={{ marginRight: "10px" }}>
+
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-1 rounded-md bg-red-500 hover:bg-gray-700 text-white"
+            >
               Cancel
             </button>
-            <button type="submit">Retweet</button>
+            <button
+              type="submit"
+              className="px-4 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Retweet
+            </button>
           </div>
         </form>
       </div>

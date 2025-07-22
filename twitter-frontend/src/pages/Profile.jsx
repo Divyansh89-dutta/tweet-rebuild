@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import API from "../api/axios";
 import MyTweetsPage from "../components/MyTweetsPage";
 import SavedTweetsPage from "../components/SavedTweetsPage";
+import Navbar from "../components/Navbar";
 
 function Profile() {
   const { user, logout } = useAuth();
@@ -25,7 +26,7 @@ function Profile() {
     if (!user || !user.token) {
       window.location.href = "/login";
     }
-  })
+  });
   const fetchProfile = async () => {
     try {
       setLoading(true);
@@ -90,32 +91,14 @@ function Profile() {
   if (error) return <p className="text-center text-red-500">{error}</p>;
 
   return (
-    <div className="min-h-screen bg-black text-white px-4 pt-12">
-      <nav className="mb-8 text-sm space-x-4 text-center">
-        <Link to="/home" className="text-sky-400 hover:underline">
-          Home
-        </Link>
-        <span className="text-gray-500">|</span>
-        <Link to="/profile" className="text-sky-400 hover:underline">
-          Profile
-        </Link>
-      </nav>
+    <div className="min-h-screen bg-gradient-to-b from-black  via-[#0f172a] to-[#1e293b] text-white px-4 pt-3">
+      <div className="absolute top-0 left-0 w-60 h-60 bg-blue-500 opacity-20 blur-3xl rounded-full" />
+      <div className="absolute bottom-0 right-0 w-60 h-60 bg-fuchsia-600 opacity-10 blur-3xl rounded-full" />
+      <Navbar user={user} />
 
       {profile && (
-        <div className="max-w-2xl mx-auto bg-[#16181C] p-6 rounded-xl border border-gray-700">
+        <div className="max-w-2xl mx-auto bg-[#142624B] p-6 rounded-xl border border-gray-700">
           <div className="text-center mb-6">
-            {avatarPreview ? (
-              <img
-                src={avatarPreview}
-                alt="avatar"
-                className="w-28 h-28 rounded-full mx-auto object-cover border border-gray-700"
-              />
-            ) : (
-              <div className="w-28 h-28 rounded-full bg-gray-700 mx-auto flex items-center justify-center text-4xl">
-                ?
-              </div>
-            )}
-
             {editing ? (
               <>
                 <label className="block mt-4 text-gray-300">
@@ -133,40 +116,40 @@ function Profile() {
                   value={editData.name}
                   onChange={handleEditChange}
                   placeholder="Name"
-                  className="w-full mt-2 p-2 rounded bg-gray-800 text-white"
+                  className="w-full mt-2 p-2 rounded text-white"
                 />
                 <input
                   name="bio"
                   value={editData.bio}
                   onChange={handleEditChange}
                   placeholder="Bio"
-                  className="w-full mt-2 p-2 rounded bg-gray-800 text-white"
+                  className="w-full mt-2 p-2 rounded text-white"
                 />
                 <input
                   name="location"
                   value={editData.location}
                   onChange={handleEditChange}
                   placeholder="Location"
-                  className="w-full mt-2 p-2 rounded bg-gray-800 text-white"
+                  className="w-full mt-2 p-2 rounded text-white"
                 />
                 <input
                   name="website"
                   value={editData.website}
                   onChange={handleEditChange}
                   placeholder="Website"
-                  className="w-full mt-2 p-2 rounded bg-gray-800 text-white"
+                  className="w-full mt-2 p-2 rounded text-white"
                 />
 
                 <div className="flex gap-2 mt-3">
                   <button
                     onClick={handleSave}
-                    className="flex-1 bg-green-600 p-2 rounded"
+                    className="flex-1 bg-sky-500 p-2 rounded"
                   >
                     Save
                   </button>
                   <button
                     onClick={() => setEditing(false)}
-                    className="flex-1 bg-gray-600 p-2 rounded"
+                    className="flex-1 bg-blue-500 p-2 rounded"
                   >
                     Cancel
                   </button>
@@ -174,26 +157,45 @@ function Profile() {
               </>
             ) : (
               <>
-                <p className="text-xl font-semibold mt-2">{profile.name}</p>
-                <p className="text-gray-400">@{profile.username}</p>
-                <p className="text-sm">{profile.bio}</p>
-                <p className="text-sm text-gray-500">{profile.location}</p>
-                {profile.website && (
-                  <a
-                    href={profile.website}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-sky-400 hover:underline"
+                <div className="flex items-center justify-center ">
+                  {avatarPreview ? (
+                    <img
+                      src={avatarPreview}
+                      alt="avatar"
+                      className="w-20 h-20 rounded-full mx-auto object-cover border border-gray-700"
+                    />
+                  ) : (
+                    <div className="w-28 h-28 rounded-full bg-gray-700 mx-auto flex items-center justify-center text-4xl">
+                      ?
+                    </div>
+                  )}
+                  <div className="text-start">
+                    <p className="text-[18px] font-semibole">{profile.name}</p>
+                    <p className="text-gray-400 text-[15px]">
+                      @{profile.username}
+                    </p>
+                    <p className="text-[14px]">{profile.bio}</p>
+                    <p className="text-[14px] text-gray-400">
+                      {profile.location}
+                    </p>
+                    {profile.website && (
+                      <a
+                        href={profile.website}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sky-400 text-[15px] hover:underline"
+                      >
+                        {profile.website}
+                      </a>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setEditing(true)}
+                    className="block px-2 mt-23 font-semibold py-1 text-[12px] bg-sky-600 rounded-xl"
                   >
-                    {profile.website}
-                  </a>
-                )}
-                <button
-                  onClick={() => setEditing(true)}
-                  className="block mt-4 mx-auto px-4 py-2 bg-blue-600 rounded"
-                >
-                  Edit Profile
-                </button>
+                    Edit
+                  </button>
+                </div>
               </>
             )}
           </div>
@@ -230,7 +232,7 @@ function Profile() {
 
           <button
             onClick={logout}
-            className="mt-6 w-full py-2 bg-red-600 rounded"
+            className="mt-3 w-full py-2 bg-red-600 rounded"
           >
             Logout
           </button>
