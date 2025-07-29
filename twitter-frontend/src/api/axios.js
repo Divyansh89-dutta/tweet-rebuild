@@ -2,7 +2,7 @@ import axios from "axios";
 
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL, // e.g., "http://localhost:4000/api"
-  timeout: 10000,
+  timeout: 30000,
 });
 
 // Safely attach Authorization token if it exists
